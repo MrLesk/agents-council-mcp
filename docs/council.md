@@ -50,6 +50,58 @@ The MCP server exposes three tools:
 There is no `reset_session` tool in v1. Each `request_feedback` resets the session state
 by clearing requests, feedback, and participants.
 
+## Validation
+
+Manual multi-terminal (stdio + shared state):
+
+```bash
+# terminal A
+npx -y @modelcontextprotocol/inspector --cli ./dist/council mcp --method tools/call \
+  --tool-name request_feedback --tool-arg content="Need feedback from the council." \
+  --tool-arg agent_id=agent-a --transport stdio
+```
+
+```bash
+# terminal B
+npx -y @modelcontextprotocol/inspector --cli ./dist/council mcp --method tools/call \
+  --tool-name check_session --tool-arg agent_id=agent-b --transport stdio
+```
+
+```bash
+# terminal B (polling boundary)
+npx -y @modelcontextprotocol/inspector --cli ./dist/council mcp --method tools/call \
+  --tool-name check_session --tool-arg agent_id=agent-b \
+  --tool-arg cursor='{"last_request_seen":"<request_id>","last_feedback_seen":null}' \
+  --transport stdio
+```
+
+```bash
+# terminal C
+npx -y @modelcontextprotocol/inspector --cli ./dist/council mcp --method tools/call \
+  --tool-name provide_feedback --tool-arg agent_id=agent-b \
+  --tool-arg request_id=<request_id> --tool-arg content="Looks good." --transport stdio
+```
+
+```bash
+# terminal B (poll for new feedback)
+npx -y @modelcontextprotocol/inspector --cli ./dist/council mcp --method tools/call \
+  --tool-name check_session --tool-arg agent_id=agent-b \
+  --tool-arg cursor='{"last_request_seen":"<request_id>","last_feedback_seen":null}' \
+  --transport stdio
+```
+
+If you want to validate the lockfile behavior, run the terminal B/C commands in parallel and
+confirm `~/.agents-council/state.json` stays valid JSON and `state.json.lock` is cleaned up.
+
+MCP Inspector UI smoke test:
+
+```bash
+npx -y @modelcontextprotocol/inspector --transport stdio -- ./dist/council mcp
+```
+
+1. Open the UI URL printed by the Inspector.
+2. Connect (stdio), click "List Tools", then run `request_feedback` with any inputs.
+
 ## Architecture
 
 Core vs MCP adapter split:

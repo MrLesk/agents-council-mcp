@@ -1,11 +1,11 @@
 ---
 id: task-1
 title: 'Council v1: SDK v1.x MCP CLI + core domain'
-status: In Progress
+status: Done
 assignee:
   - codex
 created_date: '2025-12-21 11:23'
-updated_date: '2025-12-21 17:31'
+updated_date: '2025-12-21 17:53'
 labels: []
 milestone: Council v1 (stdio)
 dependencies: []
@@ -19,16 +19,16 @@ Deliver the Bun-based council CLI (npm: agents-council, binary: council) with an
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 `council mcp` starts the MCP stdio server using the TypeScript MCP SDK v1.x only.
-- [ ] #2 Running `council` without `mcp` prints the startup error message.
-- [ ] #3 MCP server exposes request_feedback, check_session, and provide_feedback.
-- [ ] #4 Core domain logic lives under `src/core` and the MCP interface only forwards to it.
-- [ ] #5 Compiled `council` binary is available for local use.
-- [ ] #6 All v1 subtasks are completed and integrated.
+- [x] #1 `council mcp` starts the MCP stdio server using the TypeScript MCP SDK v1.x only.
+- [x] #2 Running `council` without `mcp` prints the startup error message.
+- [x] #3 MCP server exposes request_feedback, check_session, and provide_feedback.
+- [x] #4 Core domain logic lives under `src/core` and the MCP interface only forwards to it.
+- [x] #5 Compiled `council` binary is available for local use.
+- [x] #6 All v1 subtasks are completed and integrated.
 
-- [ ] #7 Linting passes (Biome).
-- [ ] #8 Formatting check passes (Biome).
-- [ ] #9 Type check passes.
+- [x] #7 Linting passes (Biome).
+- [x] #8 Formatting check passes (Biome).
+- [x] #9 Type check passes.
 <!-- AC:END -->
 
 ## Implementation Plan
@@ -63,4 +63,6 @@ Requirement change: reset_session tool removed; request_feedback now resets sess
 Subtask 1.5 complete: MCP stdio adapter wired to CouncilService with three tools; DTO mapping added; zod dependency added; lint/format/typecheck pass.
 
 Subtask 1.6 complete: docs/council.md added with CLI usage, architecture split, v1 tool semantics, SDK requirement, and state path env var.
+
+Subtask 1.7 complete: inspector CLI/UI smoke tests, manual stdio flow validated, docs updated with validation steps; lint/format/typecheck pass.
 <!-- SECTION:NOTES:END -->

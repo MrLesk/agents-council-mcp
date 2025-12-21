@@ -1,10 +1,11 @@
 ---
 id: task-1.7
 title: 'Validation: council mcp + MCP Inspector smoke tests'
-status: To Do
-assignee: []
+status: Done
+assignee:
+  - codex
 created_date: '2025-12-21 11:25'
-updated_date: '2025-12-21 12:55'
+updated_date: '2025-12-21 17:53'
 labels: []
 milestone: Council v1 (stdio)
 dependencies:
@@ -20,12 +21,12 @@ Validate the stdio MCP server using the `council mcp` command and capture repeat
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Manual multi-terminal run using `council mcp` confirms session creation, polling, and lock behavior.
-- [ ] #2 MCP Inspector smoke test succeeds for tools/list and tools/call.
-- [ ] #3 Validation steps are captured in project docs or runbook.
-- [ ] #4 Linting passes (Biome).
-- [ ] #5 Formatting check passes (Biome).
-- [ ] #6 Type check passes.
+- [x] #1 Manual multi-terminal run using `council mcp` confirms session creation, polling, and lock behavior.
+- [x] #2 MCP Inspector smoke test succeeds for tools/list and tools/call.
+- [x] #3 Validation steps are captured in project docs or runbook.
+- [x] #4 Linting passes (Biome).
+- [x] #5 Formatting check passes (Biome).
+- [x] #6 Type check passes.
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -34,4 +35,10 @@ Validate the stdio MCP server using the `council mcp` command and capture repeat
 References:
 - docs/mcp/docs/tools/inspector.md
 - docs/mcp/specification/2025-11-25/basic/transports.md
+
+Validation: inspector CLI calls (request_feedback/check_session/provide_feedback + cursor polling) confirmed session creation and polling; shared state JSON remained valid after multiple updates.
+
+Inspector UI: connected via stdio, listed tools, ran request_feedback successfully.
+
+Checks: bun run lint, bun run format:check, bun run typecheck.
 <!-- SECTION:NOTES:END -->

@@ -30,20 +30,20 @@ import type {
 export function mapRequestFeedbackInput(params: RequestFeedbackParams): RequestFeedbackInput {
   return {
     content: params.content,
-    agentId: params.agent_id,
+    agentName: params.agent_name,
   };
 }
 
 export function mapCheckSessionInput(params: CheckSessionParams): CheckSessionInput {
   return {
-    agentId: params.agent_id,
+    agentName: params.agent_name,
     cursor: params.cursor ? mapCursorFromDto(params.cursor) : undefined,
   };
 }
 
 export function mapProvideFeedbackInput(params: ProvideFeedbackParams): ProvideFeedbackInput {
   return {
-    agentId: params.agent_id,
+    agentName: params.agent_name,
     requestId: params.request_id,
     content: params.content,
   };
@@ -51,6 +51,7 @@ export function mapProvideFeedbackInput(params: ProvideFeedbackParams): ProvideF
 
 export function mapRequestFeedbackResponse(result: RequestFeedbackResult): RequestFeedbackResponse {
   return {
+    agent_name: result.agentName,
     session_id: result.session.id,
     request_id: result.request.id,
     state: mapCouncilState(result.state),
@@ -59,6 +60,7 @@ export function mapRequestFeedbackResponse(result: RequestFeedbackResult): Reque
 
 export function mapCheckSessionResponse(result: CheckSessionResult): CheckSessionResponse {
   return {
+    agent_name: result.agentName,
     session_id: result.session?.id ?? null,
     request: result.request ? mapRequest(result.request) : null,
     feedback: result.feedback.map(mapFeedback),
@@ -70,6 +72,7 @@ export function mapCheckSessionResponse(result: CheckSessionResult): CheckSessio
 
 export function mapProvideFeedbackResponse(result: ProvideFeedbackResult): ProvideFeedbackResponse {
   return {
+    agent_name: result.agentName,
     feedback: mapFeedback(result.feedback),
     state: mapCouncilState(result.state),
   };
@@ -116,7 +119,7 @@ function mapFeedback(feedback: CouncilFeedback): FeedbackDto {
 
 function mapParticipant(participant: CouncilParticipant): ParticipantDto {
   return {
-    agent_id: participant.agentId,
+    agent_name: participant.agentName,
     last_seen: participant.lastSeen,
     last_request_seen: participant.lastRequestSeen,
     last_feedback_seen: participant.lastFeedbackSeen,

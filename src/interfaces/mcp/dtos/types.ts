@@ -30,7 +30,7 @@ export type FeedbackDto = {
 };
 
 export type ParticipantDto = {
-  agent_id: string;
+  agent_name: string;
   last_seen: string;
   last_request_seen: string | null;
   last_feedback_seen: string | null;
@@ -43,21 +43,23 @@ export type SessionCursorDto = {
 
 export type RequestFeedbackParams = {
   content: string;
-  agent_id: string;
+  agent_name: string;
 };
 
 export type RequestFeedbackResponse = {
+  agent_name: string;
   session_id: string;
   request_id: string;
   state: CouncilStateDto;
 };
 
 export type CheckSessionParams = {
-  agent_id: string;
+  agent_name: string;
   cursor?: SessionCursorDto;
 };
 
 export type CheckSessionResponse = {
+  agent_name: string;
   session_id: string | null;
   request: RequestDto | null;
   feedback: FeedbackDto[];
@@ -67,12 +69,13 @@ export type CheckSessionResponse = {
 };
 
 export type ProvideFeedbackParams = {
-  agent_id: string;
+  agent_name: string;
   request_id: string;
   content: string;
 };
 
 export type ProvideFeedbackResponse = {
+  agent_name: string;
   feedback: FeedbackDto;
   state: CouncilStateDto;
 };

@@ -29,17 +29,18 @@ export class CouncilServiceImpl implements CouncilService {
     return this.store.update((state) => {
       const now = nowIso();
       const session = createSession(now);
+      const { agentName } = resolveAgentName([], input.agentName, { allowReuse: true });
       const requestId = randomUUID();
       const request: CouncilRequest = {
         id: requestId,
         content: input.content,
-        createdBy: input.agentId,
+        createdBy: agentName,
         createdAt: now,
         status: "open",
       };
 
-      const { participants } = updateParticipant([], input.agentId, now, (participant) => ({
-        ...participant,
+      const { participants, participant } = updateParticipant([], agentName, now, (candidate) => ({
+        ...candidate,
         lastSeen: now,
         lastRequestSeen: requestId,
       }));
@@ -61,6 +62,7 @@ export class CouncilServiceImpl implements CouncilService {
       return {
         state: nextState,
         result: {
+          agentName: participant.agentName,
           session: nextSession,
           request,
           state: nextState,
@@ -72,10 +74,13 @@ export class CouncilServiceImpl implements CouncilService {
   async checkSession(input: CheckSessionInput): Promise<CheckSessionResult> {
     return this.store.update((state) => {
       const now = nowIso();
-      const existingParticipant = getParticipant(state.participants, input.agentId, now);
+      const allowReuse = input.cursor !== undefined;
+      const { agentName, existingParticipant } = resolveAgentName(state.participants, input.agentName, {
+        allowReuse,
+      });
       const effectiveCursor: SessionCursor = input.cursor ?? {
-        lastRequestSeen: existingParticipant.lastRequestSeen,
-        lastFeedbackSeen: existingParticipant.lastFeedbackSeen,
+        lastRequestSeen: existingParticipant?.lastRequestSeen ?? null,
+        lastFeedbackSeen: existingParticipant?.lastFeedbackSeen ?? null,
       };
 
       const currentRequest = getCurrentRequest(state);
@@ -87,7 +92,7 @@ export class CouncilServiceImpl implements CouncilService {
         lastFeedbackSeen: lastFeedback ? lastFeedback.id : effectiveCursor.lastFeedbackSeen,
       };
 
-      const { participants, participant } = updateParticipant(state.participants, input.agentId, now, (candidate) => ({
+      const { participants, participant } = updateParticipant(state.participants, agentName, now, (candidate) => ({
         ...candidate,
         lastSeen: now,
         lastRequestSeen: nextCursor.lastRequestSeen,
@@ -102,6 +107,7 @@ export class CouncilServiceImpl implements CouncilService {
       return {
         state: nextState,
         result: {
+          agentName: participant.agentName,
           session: state.session,
           request,
           feedback,
@@ -121,16 +127,17 @@ export class CouncilServiceImpl implements CouncilService {
       }
 
       const now = nowIso();
+      const { agentName } = resolveAgentName(state.participants, input.agentName, { allowReuse: true });
       const feedback: CouncilFeedback = {
         id: randomUUID(),
         requestId: request.id,
-        author: input.agentId,
+        author: agentName,
         content: input.content,
         createdAt: now,
       };
 
-      const { participants } = updateParticipant(state.participants, input.agentId, now, (participant) => ({
-        ...participant,
+      const { participants, participant } = updateParticipant(state.participants, agentName, now, (candidate) => ({
+        ...candidate,
         lastSeen: now,
         lastRequestSeen: request.id,
         lastFeedbackSeen: feedback.id,
@@ -145,6 +152,7 @@ export class CouncilServiceImpl implements CouncilService {
       return {
         state: nextState,
         result: {
+          agentName: participant.agentName,
           feedback,
           state: nextState,
         },
@@ -188,32 +196,47 @@ function sliceAfterId<T extends { id: string }>(items: T[], lastSeenId: string |
   return items.slice(index + 1);
 }
 
-function getParticipant(participants: CouncilParticipant[], agentId: string, now: string): CouncilParticipant {
-  const participant = participants.find((candidate) => candidate.agentId === agentId);
-  if (participant) {
-    return participant;
+function resolveAgentName(
+  participants: CouncilParticipant[],
+  requestedName: string,
+  options: { allowReuse: boolean },
+): { agentName: string; existingParticipant: CouncilParticipant | null } {
+  const existingParticipant = participants.find((participant) => participant.agentName === requestedName) ?? null;
+  if (existingParticipant && options.allowReuse) {
+    return { agentName: existingParticipant.agentName, existingParticipant };
   }
 
   return {
-    agentId,
-    lastSeen: now,
-    lastRequestSeen: null,
-    lastFeedbackSeen: null,
+    agentName: nextAvailableAgentName(participants, requestedName),
+    existingParticipant: options.allowReuse ? existingParticipant : null,
   };
+}
+
+function nextAvailableAgentName(participants: CouncilParticipant[], requestedName: string): string {
+  if (!participants.some((participant) => participant.agentName === requestedName)) {
+    return requestedName;
+  }
+
+  let suffix = 1;
+  while (participants.some((participant) => participant.agentName === `${requestedName}#${suffix}`)) {
+    suffix += 1;
+  }
+
+  return `${requestedName}#${suffix}`;
 }
 
 function updateParticipant(
   participants: CouncilParticipant[],
-  agentId: string,
+  agentName: string,
   now: string,
   updater: (participant: CouncilParticipant) => CouncilParticipant,
 ): { participants: CouncilParticipant[]; participant: CouncilParticipant } {
-  const index = participants.findIndex((participant) => participant.agentId === agentId);
+  const index = participants.findIndex((participant) => participant.agentName === agentName);
   const baseParticipant =
     index >= 0 && participants[index]
       ? participants[index]
       : {
-          agentId,
+          agentName,
           lastSeen: now,
           lastRequestSeen: null,
           lastFeedbackSeen: null,

@@ -42,46 +42,46 @@ JSON root (example structure):
     "current_request_id": "uuid"
   },
   "requests": [
-    {
-      "id": "uuid",
-      "content": "...",
-      "created_by": "agent_id",
-      "created_at": "iso",
-      "status": "open"
-    }
+      {
+        "id": "uuid",
+        "content": "...",
+        "created_by": "agent_name",
+        "created_at": "iso",
+        "status": "open"
+      }
   ],
   "feedback": [
-    {
-      "id": "uuid",
-      "request_id": "uuid",
-      "author": "agent_id",
-      "content": "...",
-      "created_at": "iso"
-    }
+      {
+        "id": "uuid",
+        "request_id": "uuid",
+        "author": "agent_name",
+        "content": "...",
+        "created_at": "iso"
+      }
   ],
   "participants": [
-    {
-      "agent_id": "agent_id",
-      "last_seen": "iso",
-      "last_request_seen": "uuid",
-      "last_feedback_seen": "uuid"
-    }
+      {
+        "agent_name": "agent_name",
+        "last_seen": "iso",
+        "last_request_seen": "uuid",
+        "last_feedback_seen": "uuid"
+      }
   ]
 }
 ```
 
 ## Tool semantics
-- `request_feedback({ content, agent_id })`
+- `request_feedback({ content, agent_name })`
   - Reset any prior session state (clear requests, feedback, participants).
   - Create a new session and request, set as current.
   - Returns `session_id`, `request_id`.
 
-- `check_session({ agent_id, cursor? })`
+- `check_session({ agent_name, cursor? })`
   - Implicitly joins the session (registers/updates participant).
   - Returns any new request or feedback since `cursor`.
   - Updates participant `last_seen` and cursor markers.
 
-- `provide_feedback({ agent_id, request_id, content })`
+- `provide_feedback({ agent_name, request_id, content })`
   - Appends feedback for the request.
   - Returns ack + current aggregate state summary.
 

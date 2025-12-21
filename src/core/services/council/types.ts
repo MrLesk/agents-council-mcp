@@ -30,7 +30,7 @@ export type CouncilFeedback = {
 };
 
 export type CouncilParticipant = {
-  agentId: string;
+  agentName: string;
   lastSeen: string;
   lastRequestSeen: string | null;
   lastFeedbackSeen: string | null;
@@ -38,10 +38,11 @@ export type CouncilParticipant = {
 
 export type RequestFeedbackInput = {
   content: string;
-  agentId: string;
+  agentName: string;
 };
 
 export type RequestFeedbackResult = {
+  agentName: string;
   session: CouncilSession;
   request: CouncilRequest;
   state: CouncilState;
@@ -53,11 +54,12 @@ export type SessionCursor = {
 };
 
 export type CheckSessionInput = {
-  agentId: string;
+  agentName: string;
   cursor?: SessionCursor;
 };
 
 export type CheckSessionResult = {
+  agentName: string;
   session: CouncilSession | null;
   request: CouncilRequest | null;
   feedback: CouncilFeedback[];
@@ -67,12 +69,13 @@ export type CheckSessionResult = {
 };
 
 export type ProvideFeedbackInput = {
-  agentId: string;
+  agentName: string;
   requestId: string;
   content: string;
 };
 
 export type ProvideFeedbackResult = {
+  agentName: string;
   feedback: CouncilFeedback;
   state: CouncilState;
 };

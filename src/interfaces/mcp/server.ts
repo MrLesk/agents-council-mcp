@@ -41,16 +41,16 @@ const cursorSchema: z.ZodTypeAny = z.object({
 
 const requestFeedbackSchema: z.ZodTypeAny = z.object({
   content: z.string().min(1),
-  agent_id: z.string().min(1),
+  agent_name: z.string().min(1),
 });
 
 const checkSessionSchema: z.ZodTypeAny = z.object({
-  agent_id: z.string().min(1),
+  agent_name: z.string().min(1),
   cursor: cursorSchema.optional(),
 });
 
 const provideFeedbackSchema: z.ZodTypeAny = z.object({
-  agent_id: z.string().min(1),
+  agent_name: z.string().min(1),
   request_id: z.string().min(1),
   content: z.string().min(1),
 });
@@ -58,7 +58,8 @@ const provideFeedbackSchema: z.ZodTypeAny = z.object({
 registerTool<RequestFeedbackParams>(
   "request_feedback",
   {
-    description: "Start a new council session and request feedback.",
+    description:
+      "Start a new council session and request feedback. Provide an agent_name; the server may append #1, #2, etc. if the name is already taken. Reuse the returned agent_name on subsequent calls.",
     inputSchema: requestFeedbackSchema,
   },
   async (params) => {
@@ -75,7 +76,7 @@ registerTool<RequestFeedbackParams>(
 registerTool<CheckSessionParams>(
   "check_session",
   {
-    description: "Check for new requests or feedback since the last cursor.",
+    description: "Check for new requests or feedback since the last cursor. Use the server-assigned agent_name.",
     inputSchema: checkSessionSchema,
   },
   async (params) => {
@@ -92,7 +93,7 @@ registerTool<CheckSessionParams>(
 registerTool<ProvideFeedbackParams>(
   "provide_feedback",
   {
-    description: "Provide feedback for the current request.",
+    description: "Provide feedback for the current request. Use the server-assigned agent_name.",
     inputSchema: provideFeedbackSchema,
   },
   async (params) => {

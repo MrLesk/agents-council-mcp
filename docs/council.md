@@ -47,6 +47,10 @@ The MCP server exposes three tools:
 - `check_session` (polls for new requests/feedback)
 - `provide_feedback` (adds feedback for a request)
 
+Each tool takes an `agent_name`. The server may append a suffix (`#1`, `#2`, ...) if the name
+is already in use; reuse the returned `agent_name` on subsequent calls. Every tool response
+includes the resolved `agent_name`.
+
 There is no `reset_session` tool in v1. Each `request_feedback` resets the session state
 by clearing requests, feedback, and participants.
 
@@ -58,19 +62,19 @@ Manual multi-terminal (stdio + shared state):
 # terminal A
 npx -y @modelcontextprotocol/inspector --cli ./dist/council mcp --method tools/call \
   --tool-name request_feedback --tool-arg content="Need feedback from the council." \
-  --tool-arg agent_id=agent-a --transport stdio
+  --tool-arg agent_name=agent-a --transport stdio
 ```
 
 ```bash
 # terminal B
 npx -y @modelcontextprotocol/inspector --cli ./dist/council mcp --method tools/call \
-  --tool-name check_session --tool-arg agent_id=agent-b --transport stdio
+  --tool-name check_session --tool-arg agent_name=agent-b --transport stdio
 ```
 
 ```bash
 # terminal B (polling boundary)
 npx -y @modelcontextprotocol/inspector --cli ./dist/council mcp --method tools/call \
-  --tool-name check_session --tool-arg agent_id=agent-b \
+  --tool-name check_session --tool-arg agent_name=agent-b \
   --tool-arg cursor='{"last_request_seen":"<request_id>","last_feedback_seen":null}' \
   --transport stdio
 ```
@@ -78,14 +82,14 @@ npx -y @modelcontextprotocol/inspector --cli ./dist/council mcp --method tools/c
 ```bash
 # terminal C
 npx -y @modelcontextprotocol/inspector --cli ./dist/council mcp --method tools/call \
-  --tool-name provide_feedback --tool-arg agent_id=agent-b \
+  --tool-name provide_feedback --tool-arg agent_name=agent-b \
   --tool-arg request_id=<request_id> --tool-arg content="Looks good." --transport stdio
 ```
 
 ```bash
 # terminal B (poll for new feedback)
 npx -y @modelcontextprotocol/inspector --cli ./dist/council mcp --method tools/call \
-  --tool-name check_session --tool-arg agent_id=agent-b \
+  --tool-name check_session --tool-arg agent_name=agent-b \
   --tool-arg cursor='{"last_request_seen":"<request_id>","last_feedback_seen":null}' \
   --transport stdio
 ```

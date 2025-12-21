@@ -2,30 +2,29 @@ import { randomUUID } from "node:crypto";
 
 import type { CouncilStateStore } from "../../state/store";
 import type {
-  CheckSessionInput,
-  CheckSessionResult,
   CouncilFeedback,
   CouncilParticipant,
   CouncilRequest,
   CouncilSession,
   CouncilState,
-  ProvideFeedbackInput,
-  ProvideFeedbackResult,
-  RequestFeedbackInput,
-  RequestFeedbackResult,
-  SessionCursor,
+  GetCurrentSessionDataInput,
+  GetCurrentSessionDataResult,
+  SendResponseInput,
+  SendResponseResult,
+  StartCouncilInput,
+  StartCouncilResult,
 } from "./types";
 
 export interface CouncilService {
-  requestFeedback(input: RequestFeedbackInput): Promise<RequestFeedbackResult>;
-  checkSession(input: CheckSessionInput): Promise<CheckSessionResult>;
-  provideFeedback(input: ProvideFeedbackInput): Promise<ProvideFeedbackResult>;
+  startCouncil(input: StartCouncilInput): Promise<StartCouncilResult>;
+  getCurrentSessionData(input: GetCurrentSessionDataInput): Promise<GetCurrentSessionDataResult>;
+  sendResponse(input: SendResponseInput): Promise<SendResponseResult>;
 }
 
 export class CouncilServiceImpl implements CouncilService {
   constructor(private readonly store: CouncilStateStore) {}
 
-  async requestFeedback(input: RequestFeedbackInput): Promise<RequestFeedbackResult> {
+  async startCouncil(input: StartCouncilInput): Promise<StartCouncilResult> {
     return this.store.update((state) => {
       const now = nowIso();
       const session = createSession(now);
@@ -33,7 +32,7 @@ export class CouncilServiceImpl implements CouncilService {
       const requestId = randomUUID();
       const request: CouncilRequest = {
         id: requestId,
-        content: input.content,
+        content: input.request,
         createdBy: agentName,
         createdAt: now,
         status: "open",
@@ -71,32 +70,23 @@ export class CouncilServiceImpl implements CouncilService {
     });
   }
 
-  async checkSession(input: CheckSessionInput): Promise<CheckSessionResult> {
+  async getCurrentSessionData(input: GetCurrentSessionDataInput): Promise<GetCurrentSessionDataResult> {
     return this.store.update((state) => {
       const now = nowIso();
-      const allowReuse = input.cursor !== undefined;
-      const { agentName, existingParticipant } = resolveAgentName(state.participants, input.agentName, {
-        allowReuse,
+      const { agentName } = resolveAgentName(state.participants, input.agentName, {
+        allowReuse: true,
       });
-      const effectiveCursor: SessionCursor = input.cursor ?? {
-        lastRequestSeen: existingParticipant?.lastRequestSeen ?? null,
-        lastFeedbackSeen: existingParticipant?.lastFeedbackSeen ?? null,
-      };
-
-      const currentRequest = getCurrentRequest(state);
-      const request = currentRequest && currentRequest.id !== effectiveCursor.lastRequestSeen ? currentRequest : null;
-      const feedback = sliceAfterId(state.feedback, effectiveCursor.lastFeedbackSeen);
+      const effectiveCursor = input.cursor ?? null;
+      const request = getCurrentRequest(state);
+      const feedback = sliceAfterId(state.feedback, effectiveCursor);
       const lastFeedback = feedback.at(-1);
-      const nextCursor: SessionCursor = {
-        lastRequestSeen: request ? request.id : effectiveCursor.lastRequestSeen,
-        lastFeedbackSeen: lastFeedback ? lastFeedback.id : effectiveCursor.lastFeedbackSeen,
-      };
+      const nextCursor = lastFeedback ? lastFeedback.id : effectiveCursor;
 
       const { participants, participant } = updateParticipant(state.participants, agentName, now, (candidate) => ({
         ...candidate,
         lastSeen: now,
-        lastRequestSeen: nextCursor.lastRequestSeen,
-        lastFeedbackSeen: nextCursor.lastFeedbackSeen,
+        lastRequestSeen: request ? request.id : candidate.lastRequestSeen,
+        lastFeedbackSeen: nextCursor,
       }));
 
       const nextState: CouncilState = {
@@ -119,11 +109,11 @@ export class CouncilServiceImpl implements CouncilService {
     });
   }
 
-  async provideFeedback(input: ProvideFeedbackInput): Promise<ProvideFeedbackResult> {
+  async sendResponse(input: SendResponseInput): Promise<SendResponseResult> {
     return this.store.update((state) => {
-      const request = state.requests.find((candidate) => candidate.id === input.requestId);
+      const request = getCurrentRequest(state);
       if (!request) {
-        throw new Error(`Request not found: ${input.requestId}`);
+        throw new Error("No active request.");
       }
 
       const now = nowIso();

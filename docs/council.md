@@ -16,7 +16,7 @@ bun install
 Global install (if published):
 
 ```bash
-npm install -g agents-council
+npm install -g agents-council-mcp
 ```
 
 ## Build
@@ -43,16 +43,49 @@ Startup error: you need to run 'council mcp' in order to start the mcp server
 
 The MCP server exposes three tools:
 
-- `request_feedback` (starts a new session and resets any existing session state)
-- `check_session` (polls for new requests/feedback)
-- `provide_feedback` (adds feedback for a request)
+- `start_council` (starts a new session and records the council request)
+- `get_current_session_data` (returns the session request and responses, optionally from a cursor)
+- `send_response` (adds a response to the current request)
 
 Each tool takes an `agent_name`. The server may append a suffix (`#1`, `#2`, ...) if the name
 is already in use; reuse the returned `agent_name` on subsequent calls. Every tool response
 includes the resolved `agent_name`.
 
-There is no `reset_session` tool in v1. Each `request_feedback` resets the session state
-by clearing requests, feedback, and participants.
+`start_council` expects a `request` input field for the council request text.
+
+There is no `reset_session` tool in v1. Each `start_council` resets the session state
+by clearing requests, responses, and participants.
+
+## Response format
+
+Use `--format` (or `-f`) with `markdown|json` on `council mcp` (default: `markdown`). Markdown responses are
+plain text for agents:
+
+- `start_council`:
+  - `Council request received. Check again later for responses.`
+  - `Your assigned name is: <agent_name>`
+- `get_current_session_data`:
+  - `Your assigned name is: <agent_name>`
+  - `---`
+  - `Council session started by <created_by>`
+  - `Request: <request>`
+  - `---`
+  - `Messages (from <cursor or "start">):`
+  - (blank line)
+  - Response blocks:
+    - `<author>`
+    - `Response: <content>`
+    - separated by `---`
+  - `There are no other responses for now. You can query again later.`
+  - `If you want to skip these responses use the cursor to get only new responses: <cursor>`
+- `send_response`:
+  - `Response recorded.`
+  - `Your assigned name is: <agent_name>`
+
+## Compatibility
+
+This project does not maintain backwards compatibility. Tool names, inputs, and responses
+may change without legacy support; update clients alongside releases.
 
 ## Validation
 
@@ -61,37 +94,44 @@ Manual multi-terminal (stdio + shared state):
 ```bash
 # terminal A
 npx -y @modelcontextprotocol/inspector --cli ./dist/council mcp --method tools/call \
-  --tool-name request_feedback --tool-arg content="Need feedback from the council." \
+  --tool-name start_council --tool-arg request="Need feedback from the council." \
   --tool-arg agent_name=agent-a --transport stdio
 ```
 
 ```bash
 # terminal B
 npx -y @modelcontextprotocol/inspector --cli ./dist/council mcp --method tools/call \
-  --tool-name check_session --tool-arg agent_name=agent-b --transport stdio
+  --tool-name get_current_session_data --tool-arg agent_name=agent-b --transport stdio
 ```
 
 ```bash
 # terminal B (polling boundary)
 npx -y @modelcontextprotocol/inspector --cli ./dist/council mcp --method tools/call \
-  --tool-name check_session --tool-arg agent_name=agent-b \
-  --tool-arg cursor='{"last_request_seen":"<request_id>","last_feedback_seen":null}' \
+  --tool-name get_current_session_data --tool-arg agent_name=agent-b \
+  --tool-arg cursor=<response_id> \
   --transport stdio
 ```
 
 ```bash
 # terminal C
 npx -y @modelcontextprotocol/inspector --cli ./dist/council mcp --method tools/call \
-  --tool-name provide_feedback --tool-arg agent_name=agent-b \
-  --tool-arg request_id=<request_id> --tool-arg content="Looks good." --transport stdio
+  --tool-name send_response --tool-arg agent_name=agent-b \
+  --tool-arg content="Looks good." --transport stdio
 ```
 
 ```bash
-# terminal B (poll for new feedback)
+# terminal B (poll for new responses)
 npx -y @modelcontextprotocol/inspector --cli ./dist/council mcp --method tools/call \
-  --tool-name check_session --tool-arg agent_name=agent-b \
-  --tool-arg cursor='{"last_request_seen":"<request_id>","last_feedback_seen":null}' \
+  --tool-name get_current_session_data --tool-arg agent_name=agent-b \
+  --tool-arg cursor=<response_id> \
   --transport stdio
+```
+
+```bash
+# terminal A (json text format)
+npx -y @modelcontextprotocol/inspector --cli ./dist/council mcp --format json --method tools/call \
+  --tool-name start_council --tool-arg request="Need feedback from the council." \
+  --tool-arg agent_name=agent-a --transport stdio
 ```
 
 If you want to validate the lockfile behavior, run the terminal B/C commands in parallel and
@@ -104,7 +144,7 @@ npx -y @modelcontextprotocol/inspector --transport stdio -- ./dist/council mcp
 ```
 
 1. Open the UI URL printed by the Inspector.
-2. Connect (stdio), click "List Tools", then run `request_feedback` with any inputs.
+2. Connect (stdio), click "List Tools", then run `start_council` with any inputs.
 
 ## Architecture
 

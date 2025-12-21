@@ -1,4 +1,3 @@
-
 <!-- BACKLOG.MD MCP GUIDELINES START -->
 
 <CRITICAL_INSTRUCTION>
@@ -27,3 +26,10 @@ You MUST read the overview resource to understand the complete workflow. The inf
 </CRITICAL_INSTRUCTION>
 
 <!-- BACKLOG.MD MCP GUIDELINES END -->
+
+## Important instructions for this project that should be kept in mind:
+
+* [Development plan for this project](plan.md) 
+* [Development instructions](docs/council.md) 
+* [Up to date Bun documentation](docs/bun.md)
+* [Up to date MCP documentation](docs/mcp.md)

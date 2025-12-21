@@ -36,45 +36,39 @@ export type ParticipantDto = {
   last_feedback_seen: string | null;
 };
 
-export type SessionCursorDto = {
-  last_request_seen: string | null;
-  last_feedback_seen: string | null;
-};
-
-export type RequestFeedbackParams = {
-  content: string;
+export type StartCouncilParams = {
+  request: string;
   agent_name: string;
 };
 
-export type RequestFeedbackResponse = {
+export type StartCouncilResponse = {
   agent_name: string;
   session_id: string;
   request_id: string;
   state: CouncilStateDto;
 };
 
-export type CheckSessionParams = {
+export type GetCurrentSessionDataParams = {
   agent_name: string;
-  cursor?: SessionCursorDto;
+  cursor?: string;
 };
 
-export type CheckSessionResponse = {
+export type GetCurrentSessionDataResponse = {
   agent_name: string;
   session_id: string | null;
   request: RequestDto | null;
   feedback: FeedbackDto[];
   participant: ParticipantDto;
-  next_cursor: SessionCursorDto;
+  next_cursor: string | null;
   state: CouncilStateDto;
 };
 
-export type ProvideFeedbackParams = {
+export type SendResponseParams = {
   agent_name: string;
-  request_id: string;
   content: string;
 };
 
-export type ProvideFeedbackResponse = {
+export type SendResponseResponse = {
   agent_name: string;
   feedback: FeedbackDto;
   state: CouncilStateDto;

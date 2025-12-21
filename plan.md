@@ -9,9 +9,9 @@ Build a Bun + TypeScript CLI (npm package: `agents-council`, binary: `council`) 
 - Running `council` (without `mcp`) prints: `Startup error: you need to run council mcp in order to start the mcp server`.
 - NPM package name is `agents-council`; binary name is `council`.
 - Domain-driven structure: `src/core` contains domain types, services, and state. No business logic in MCP layer.
-- Tools only: `request_feedback`, `check_session`, `provide_feedback`.
-- Session creation is implicit in `request_feedback`, which resets prior session state.
-- Join is implicit in `check_session`.
+- Tools only: `start_council`, `get_current_session_data`, `send_response`.
+- Session creation is implicit in `start_council`, which resets prior session state.
+- Join is implicit in `get_current_session_data`.
 - Single active session; no history; no explicit end/status tools in v1.
 - Non-blocking tool calls with explicit polling boundaries.
 - Shared state at `~/.agents-council/state.json` (configurable override).
@@ -71,18 +71,18 @@ JSON root (example structure):
 ```
 
 ## Tool semantics
-- `request_feedback({ content, agent_name })`
-  - Reset any prior session state (clear requests, feedback, participants).
+- `start_council({ request, agent_name })`
+  - Reset any prior session state (clear requests, responses, participants).
   - Create a new session and request, set as current.
   - Returns `session_id`, `request_id`.
 
-- `check_session({ agent_name, cursor? })`
+- `get_current_session_data({ agent_name, cursor? })`
   - Implicitly joins the session (registers/updates participant).
-  - Returns any new request or feedback since `cursor`.
+  - Returns the session request and any responses since `cursor` (response cursor token string).
   - Updates participant `last_seen` and cursor markers.
 
-- `provide_feedback({ agent_name, request_id, content })`
-  - Appends feedback for the request.
+- `send_response({ agent_name, content })`
+  - Appends a response for the current request.
   - Returns ack + current aggregate state summary.
 
 ## Locking and atomic writes

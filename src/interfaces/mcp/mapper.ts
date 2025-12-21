@@ -1,55 +1,52 @@
 import type {
-  CheckSessionParams,
-  CheckSessionResponse,
   CouncilStateDto,
   FeedbackDto,
+  GetCurrentSessionDataParams,
+  GetCurrentSessionDataResponse,
   ParticipantDto,
-  ProvideFeedbackParams,
-  ProvideFeedbackResponse,
   RequestDto,
-  RequestFeedbackParams,
-  RequestFeedbackResponse,
-  SessionCursorDto,
+  SendResponseParams,
+  SendResponseResponse,
   SessionDto,
+  StartCouncilParams,
+  StartCouncilResponse,
 } from "./dtos/types";
 import type {
-  CheckSessionInput,
-  CheckSessionResult,
   CouncilFeedback,
   CouncilParticipant,
   CouncilRequest,
   CouncilSession,
   CouncilState,
-  ProvideFeedbackInput,
-  ProvideFeedbackResult,
-  RequestFeedbackInput,
-  RequestFeedbackResult,
-  SessionCursor,
+  GetCurrentSessionDataInput,
+  GetCurrentSessionDataResult,
+  SendResponseInput,
+  SendResponseResult,
+  StartCouncilInput,
+  StartCouncilResult,
 } from "../../core/services/council/types";
 
-export function mapRequestFeedbackInput(params: RequestFeedbackParams): RequestFeedbackInput {
+export function mapStartCouncilInput(params: StartCouncilParams): StartCouncilInput {
   return {
+    request: params.request,
+    agentName: params.agent_name,
+  };
+}
+
+export function mapGetCurrentSessionDataInput(params: GetCurrentSessionDataParams): GetCurrentSessionDataInput {
+  return {
+    agentName: params.agent_name,
+    cursor: params.cursor,
+  };
+}
+
+export function mapSendResponseInput(params: SendResponseParams): SendResponseInput {
+  return {
+    agentName: params.agent_name,
     content: params.content,
-    agentName: params.agent_name,
   };
 }
 
-export function mapCheckSessionInput(params: CheckSessionParams): CheckSessionInput {
-  return {
-    agentName: params.agent_name,
-    cursor: params.cursor ? mapCursorFromDto(params.cursor) : undefined,
-  };
-}
-
-export function mapProvideFeedbackInput(params: ProvideFeedbackParams): ProvideFeedbackInput {
-  return {
-    agentName: params.agent_name,
-    requestId: params.request_id,
-    content: params.content,
-  };
-}
-
-export function mapRequestFeedbackResponse(result: RequestFeedbackResult): RequestFeedbackResponse {
+export function mapStartCouncilResponse(result: StartCouncilResult): StartCouncilResponse {
   return {
     agent_name: result.agentName,
     session_id: result.session.id,
@@ -58,19 +55,21 @@ export function mapRequestFeedbackResponse(result: RequestFeedbackResult): Reque
   };
 }
 
-export function mapCheckSessionResponse(result: CheckSessionResult): CheckSessionResponse {
+export function mapGetCurrentSessionDataResponse(
+  result: GetCurrentSessionDataResult,
+): GetCurrentSessionDataResponse {
   return {
     agent_name: result.agentName,
     session_id: result.session?.id ?? null,
     request: result.request ? mapRequest(result.request) : null,
     feedback: result.feedback.map(mapFeedback),
     participant: mapParticipant(result.participant),
-    next_cursor: mapCursor(result.nextCursor),
+    next_cursor: result.nextCursor,
     state: mapCouncilState(result.state),
   };
 }
 
-export function mapProvideFeedbackResponse(result: ProvideFeedbackResult): ProvideFeedbackResponse {
+export function mapSendResponseResponse(result: SendResponseResult): SendResponseResponse {
   return {
     agent_name: result.agentName,
     feedback: mapFeedback(result.feedback),
@@ -123,19 +122,5 @@ function mapParticipant(participant: CouncilParticipant): ParticipantDto {
     last_seen: participant.lastSeen,
     last_request_seen: participant.lastRequestSeen,
     last_feedback_seen: participant.lastFeedbackSeen,
-  };
-}
-
-function mapCursor(cursor: SessionCursor): SessionCursorDto {
-  return {
-    last_request_seen: cursor.lastRequestSeen,
-    last_feedback_seen: cursor.lastFeedbackSeen,
-  };
-}
-
-function mapCursorFromDto(cursor: SessionCursorDto): SessionCursor {
-  return {
-    lastRequestSeen: cursor.last_request_seen,
-    lastFeedbackSeen: cursor.last_feedback_seen,
   };
 }

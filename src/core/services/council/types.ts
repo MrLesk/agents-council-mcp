@@ -36,45 +36,39 @@ export type CouncilParticipant = {
   lastFeedbackSeen: string | null;
 };
 
-export type RequestFeedbackInput = {
-  content: string;
+export type StartCouncilInput = {
+  request: string;
   agentName: string;
 };
 
-export type RequestFeedbackResult = {
+export type StartCouncilResult = {
   agentName: string;
   session: CouncilSession;
   request: CouncilRequest;
   state: CouncilState;
 };
 
-export type SessionCursor = {
-  lastRequestSeen: string | null;
-  lastFeedbackSeen: string | null;
-};
-
-export type CheckSessionInput = {
+export type GetCurrentSessionDataInput = {
   agentName: string;
-  cursor?: SessionCursor;
+  cursor?: string;
 };
 
-export type CheckSessionResult = {
+export type GetCurrentSessionDataResult = {
   agentName: string;
   session: CouncilSession | null;
   request: CouncilRequest | null;
   feedback: CouncilFeedback[];
   participant: CouncilParticipant;
-  nextCursor: SessionCursor;
+  nextCursor: string | null;
   state: CouncilState;
 };
 
-export type ProvideFeedbackInput = {
+export type SendResponseInput = {
   agentName: string;
-  requestId: string;
   content: string;
 };
 
-export type ProvideFeedbackResult = {
+export type SendResponseResult = {
   agentName: string;
   feedback: CouncilFeedback;
   state: CouncilState;

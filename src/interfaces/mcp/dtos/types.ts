@@ -6,11 +6,18 @@ export type CouncilStateDto = {
   participants: ParticipantDto[];
 };
 
+export type ConclusionDto = {
+  author: string;
+  content: string;
+  created_at: string;
+};
+
 export type SessionDto = {
   id: string;
-  status: "active";
+  status: "active" | "closed";
   created_at: string;
   current_request_id: string | null;
+  conclusion: ConclusionDto | null;
 };
 
 export type RequestDto = {
@@ -64,6 +71,18 @@ export type GetCurrentSessionDataResponse = {
   feedback: FeedbackDto[];
   participant: ParticipantDto;
   next_cursor: string | null;
+  state: CouncilStateDto;
+};
+
+export type CloseCouncilParams = {
+  agent_name: string;
+  conclusion: string;
+};
+
+export type CloseCouncilResponse = {
+  agent_name: string;
+  session_id: string;
+  conclusion: ConclusionDto;
   state: CouncilStateDto;
 };
 

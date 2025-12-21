@@ -2,6 +2,9 @@ import { randomUUID } from "node:crypto";
 
 import type { CouncilStateStore } from "../../state/store";
 import type {
+  CloseCouncilInput,
+  CloseCouncilResult,
+  CouncilConclusion,
   CouncilFeedback,
   CouncilParticipant,
   CouncilRequest,
@@ -18,6 +21,7 @@ import type {
 export interface CouncilService {
   startCouncil(input: StartCouncilInput): Promise<StartCouncilResult>;
   getCurrentSessionData(input: GetCurrentSessionDataInput): Promise<GetCurrentSessionDataResult>;
+  closeCouncil(input: CloseCouncilInput): Promise<CloseCouncilResult>;
   sendResponse(input: SendResponseInput): Promise<SendResponseResult>;
 }
 
@@ -109,8 +113,67 @@ export class CouncilServiceImpl implements CouncilService {
     });
   }
 
+  async closeCouncil(input: CloseCouncilInput): Promise<CloseCouncilResult> {
+    return this.store.update((state) => {
+      const session = state.session;
+      if (!session) {
+        throw new Error("No active session.");
+      }
+      if (session.status === "closed") {
+        throw new Error("Council session is already closed.");
+      }
+
+      const now = nowIso();
+      const { agentName } = resolveAgentName(state.participants, input.agentName, { allowReuse: true });
+      const conclusion: CouncilConclusion = {
+        author: agentName,
+        content: input.conclusion,
+        createdAt: now,
+      };
+      const request = getCurrentRequest(state);
+      const updatedSession: CouncilSession = {
+        ...session,
+        status: "closed",
+        conclusion,
+      };
+      const updatedRequests = request
+        ? state.requests.map((item) => (item.id === request.id ? { ...item, status: "closed" } : item))
+        : state.requests;
+      const lastFeedback = state.feedback.at(-1);
+      const { participants, participant } = updateParticipant(state.participants, agentName, now, (candidate) => ({
+        ...candidate,
+        lastSeen: now,
+        lastRequestSeen: request ? request.id : candidate.lastRequestSeen,
+        lastFeedbackSeen: lastFeedback ? lastFeedback.id : candidate.lastFeedbackSeen,
+      }));
+      const nextState: CouncilState = {
+        ...state,
+        session: updatedSession,
+        requests: updatedRequests,
+        participants,
+      };
+
+      return {
+        state: nextState,
+        result: {
+          agentName: participant.agentName,
+          session: updatedSession,
+          conclusion,
+          state: nextState,
+        },
+      };
+    });
+  }
+
   async sendResponse(input: SendResponseInput): Promise<SendResponseResult> {
     return this.store.update((state) => {
+      const session = state.session;
+      if (!session) {
+        throw new Error("No active session.");
+      }
+      if (session.status === "closed") {
+        throw new Error("Council session is closed.");
+      }
       const request = getCurrentRequest(state);
       if (!request) {
         throw new Error("No active request.");
@@ -161,6 +224,7 @@ function createSession(createdAt: string): CouncilSession {
     status: "active",
     createdAt,
     currentRequestId: null,
+    conclusion: null,
   };
 }
 

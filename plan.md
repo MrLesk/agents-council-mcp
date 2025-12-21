@@ -9,10 +9,10 @@ Build a Bun + TypeScript CLI (npm package: `agents-council`, binary: `council`) 
 - Running `council` (without `mcp`) prints: `Startup error: you need to run council mcp in order to start the mcp server`.
 - NPM package name is `agents-council`; binary name is `council`.
 - Domain-driven structure: `src/core` contains domain types, services, and state. No business logic in MCP layer.
-- Tools only: `start_council`, `join_council`, `get_current_session_data`, `send_response`.
+- Tools only: `start_council`, `join_council`, `get_current_session_data`, `close_council`, `send_response`.
 - Session creation is implicit in `start_council`, which resets prior session state.
 - Join is implicit in `get_current_session_data`.
-- Single active session; no history; no explicit end/status tools in v1.
+- Single active session; no history; explicit close via `close_council`.
 - Non-blocking tool calls with explicit polling boundaries.
 - Shared state at `~/.agents-council/state.json` (configurable override).
 - Bun runtime for execution and compiled distribution.
@@ -39,7 +39,8 @@ JSON root (example structure):
     "id": "uuid",
     "status": "active",
     "created_at": "iso",
-    "current_request_id": "uuid"
+    "current_request_id": "uuid",
+    "conclusion": null
   },
   "requests": [
       {
@@ -83,6 +84,9 @@ JSON root (example structure):
   - Implicitly joins the session (registers/updates participant).
   - Returns the session request and any responses since `cursor` (response cursor token string).
   - Updates participant `last_seen` and cursor markers.
+
+- `close_council({ agent_name, conclusion })`
+  - Marks the current session closed and records a conclusion.
 
 - `send_response({ agent_name, content })`
   - Appends a response for the current request.

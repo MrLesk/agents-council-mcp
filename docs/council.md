@@ -41,11 +41,12 @@ Startup error: you need to run 'council mcp' in order to start the mcp server
 
 ## Tools (v1)
 
-The MCP server exposes four tools:
+The MCP server exposes five tools:
 
 - `start_council` (starts a new session and records the council request)
 - `join_council` (first-time entry point that returns the session request and responses)
 - `get_current_session_data` (returns the session request and responses, optionally from a cursor)
+- `close_council` (closes the current session with a conclusion)
 - `send_response` (adds a response to the current request)
 
 Each tool takes an `agent_name`. The server may append a suffix (`#1`, `#2`, ...) if the name
@@ -65,7 +66,7 @@ plain text for agents:
 - `start_council`:
   - `Council request received. Check again later for responses.`
   - `Your assigned name is: <agent_name>`
-- `join_council` and `get_current_session_data`:
+- `join_council` and `get_current_session_data` (active session):
   - `Your assigned name is: <agent_name>`
   - `---`
   - `Council session started by <created_by>`
@@ -79,6 +80,17 @@ plain text for agents:
     - separated by `---`
   - `There are no other responses for now. You can query again later.`
   - `If you want to skip these responses use the cursor to get only new responses: <cursor>`
+- `join_council` and `get_current_session_data` (closed session):
+  - `Your assigned name is: <agent_name>`
+  - `---`
+  - `Council session started by <created_by>`
+  - `Request: <request>`
+  - `---`
+  - `Council session ended by <name>`
+  - `Conclusion: <conclusion>`
+- `close_council`:
+  - `Council session closed.`
+  - `Your assigned name is: <agent_name>`
 - `send_response`:
   - `Response recorded.`
   - `Your assigned name is: <agent_name>`
@@ -118,6 +130,19 @@ npx -y @modelcontextprotocol/inspector --cli ./dist/council mcp --method tools/c
 npx -y @modelcontextprotocol/inspector --cli ./dist/council mcp --method tools/call \
   --tool-name send_response --tool-arg agent_name=agent-b \
   --tool-arg content="Looks good." --transport stdio
+```
+
+```bash
+# terminal A (close the session)
+npx -y @modelcontextprotocol/inspector --cli ./dist/council mcp --method tools/call \
+  --tool-name close_council --tool-arg agent_name=agent-a \
+  --tool-arg conclusion="Consensus reached." --transport stdio
+```
+
+```bash
+# terminal B (view closed session)
+npx -y @modelcontextprotocol/inspector --cli ./dist/council mcp --method tools/call \
+  --tool-name get_current_session_data --tool-arg agent_name=agent-b --transport stdio
 ```
 
 ```bash

@@ -1,4 +1,7 @@
 import type {
+  CloseCouncilParams,
+  CloseCouncilResponse,
+  ConclusionDto,
   CouncilStateDto,
   FeedbackDto,
   GetCurrentSessionDataParams,
@@ -12,6 +15,9 @@ import type {
   StartCouncilResponse,
 } from "./dtos/types";
 import type {
+  CloseCouncilInput,
+  CloseCouncilResult,
+  CouncilConclusion,
   CouncilFeedback,
   CouncilParticipant,
   CouncilRequest,
@@ -36,6 +42,13 @@ export function mapGetCurrentSessionDataInput(params: GetCurrentSessionDataParam
   return {
     agentName: params.agent_name,
     cursor: params.cursor,
+  };
+}
+
+export function mapCloseCouncilInput(params: CloseCouncilParams): CloseCouncilInput {
+  return {
+    agentName: params.agent_name,
+    conclusion: params.conclusion,
   };
 }
 
@@ -69,6 +82,15 @@ export function mapGetCurrentSessionDataResponse(
   };
 }
 
+export function mapCloseCouncilResponse(result: CloseCouncilResult): CloseCouncilResponse {
+  return {
+    agent_name: result.agentName,
+    session_id: result.session.id,
+    conclusion: mapConclusion(result.conclusion),
+    state: mapCouncilState(result.state),
+  };
+}
+
 export function mapSendResponseResponse(result: SendResponseResult): SendResponseResponse {
   return {
     agent_name: result.agentName,
@@ -93,6 +115,7 @@ function mapSession(session: CouncilSession): SessionDto {
     status: session.status,
     created_at: session.createdAt,
     current_request_id: session.currentRequestId,
+    conclusion: session.conclusion ? mapConclusion(session.conclusion) : null,
   };
 }
 
@@ -113,6 +136,14 @@ function mapFeedback(feedback: CouncilFeedback): FeedbackDto {
     author: feedback.author,
     content: feedback.content,
     created_at: feedback.createdAt,
+  };
+}
+
+function mapConclusion(conclusion: CouncilConclusion): ConclusionDto {
+  return {
+    author: conclusion.author,
+    content: conclusion.content,
+    created_at: conclusion.createdAt,
   };
 }
 

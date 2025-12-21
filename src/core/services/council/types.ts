@@ -6,11 +6,18 @@ export type CouncilState = {
   participants: CouncilParticipant[];
 };
 
+export type CouncilConclusion = {
+  author: string;
+  content: string;
+  createdAt: string;
+};
+
 export type CouncilSession = {
   id: string;
-  status: "active";
+  status: "active" | "closed";
   createdAt: string;
   currentRequestId: string | null;
+  conclusion: CouncilConclusion | null;
 };
 
 export type CouncilRequest = {
@@ -60,6 +67,18 @@ export type GetCurrentSessionDataResult = {
   feedback: CouncilFeedback[];
   participant: CouncilParticipant;
   nextCursor: string | null;
+  state: CouncilState;
+};
+
+export type CloseCouncilInput = {
+  agentName: string;
+  conclusion: string;
+};
+
+export type CloseCouncilResult = {
+  agentName: string;
+  session: CouncilSession;
+  conclusion: CouncilConclusion;
   state: CouncilState;
 };
 

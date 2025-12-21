@@ -6,6 +6,8 @@ import { z } from "zod";
 import { CouncilServiceImpl } from "../../core/services/council";
 import { FileCouncilStateStore } from "../../core/state/fileStateStore";
 import {
+  mapCloseCouncilInput,
+  mapCloseCouncilResponse,
   mapGetCurrentSessionDataInput,
   mapGetCurrentSessionDataResponse,
   mapSendResponseInput,
@@ -14,6 +16,8 @@ import {
   mapStartCouncilResponse,
 } from "./mapper";
 import type {
+  CloseCouncilParams,
+  CloseCouncilResponse,
   GetCurrentSessionDataParams,
   GetCurrentSessionDataResponse,
   JoinCouncilParams,
@@ -24,7 +28,7 @@ import type {
 } from "./dtos/types";
 
 type ResponseFormat = "markdown" | "json";
-type ToolName = "start_council" | "join_council" | "get_current_session_data" | "send_response";
+type ToolName = "start_council" | "join_council" | "get_current_session_data" | "close_council" | "send_response";
 type ToolContext = {
   cursor?: string;
 };
@@ -66,6 +70,11 @@ const getCurrentSessionDataSchema: z.ZodTypeAny = z.object({
 const sendResponseSchema: z.ZodTypeAny = z.object({
   agent_name: z.string().min(1),
   content: z.string().min(1),
+});
+
+const closeCouncilSchema: z.ZodTypeAny = z.object({
+  agent_name: z.string().min(1),
+  conclusion: z.string().min(1),
 });
 
 registerTool<StartCouncilParams>(
@@ -118,6 +127,24 @@ registerTool<JoinCouncilParams>(
       );
       const response = mapGetCurrentSessionDataResponse(result);
       return toolOk("join_council", response, { cursor: undefined });
+    } catch (error) {
+      return toolError(error);
+    }
+  },
+);
+
+registerTool<CloseCouncilParams>(
+  "close_council",
+  {
+    description:
+      "Close the current council session with a conclusion. Use the server-assigned agent_name. Text format is set via the server --format/-f flag (markdown|json).",
+    inputSchema: closeCouncilSchema,
+  },
+  async (params) => {
+    try {
+      const result = await service.closeCouncil(mapCloseCouncilInput(params));
+      const response = mapCloseCouncilResponse(result);
+      return toolOk("close_council", response);
     } catch (error) {
       return toolError(error);
     }
@@ -194,6 +221,8 @@ function formatToolText(toolName: ToolName, payload: unknown, context: ToolConte
       return formatGetCurrentSessionData(payload as GetCurrentSessionDataResponse, context);
     case "join_council":
       return formatGetCurrentSessionData(payload as GetCurrentSessionDataResponse, context);
+    case "close_council":
+      return formatCloseCouncil(payload as CloseCouncilResponse);
     case "send_response":
       return formatSendResponse(payload as SendResponseResponse);
     default: {
@@ -214,6 +243,22 @@ function formatGetCurrentSessionData(response: GetCurrentSessionDataResponse, co
   const request = response.request;
   const requestAuthor = request?.created_by ?? "none";
   const requestContent = request?.content ?? "none";
+  const sessionStatus = response.state.session?.status;
+  const conclusion = response.state.session?.conclusion;
+  if (sessionStatus === "closed") {
+    const conclusionAuthor = conclusion?.author ?? "none";
+    const conclusionContent = conclusion?.content ?? "none";
+    return [
+      `Your assigned name is: ${response.agent_name}`,
+      "---",
+      `Council session started by ${requestAuthor}`,
+      `Request: ${requestContent}`,
+      "---",
+      `Council session ended by ${conclusionAuthor}`,
+      `Conclusion: ${conclusionContent}`,
+    ].join("\n");
+  }
+
   const cursorLabel = context.cursor ?? "start";
   const cursorToken = response.next_cursor ?? "none";
   const lines = [
@@ -235,6 +280,10 @@ function formatGetCurrentSessionData(response: GetCurrentSessionDataResponse, co
   lines.push("There are no other responses for now. You can query again later.");
   lines.push(`If you want to skip these responses use the cursor to get only new responses: ${cursorToken}`);
   return lines.join("\n");
+}
+
+function formatCloseCouncil(response: CloseCouncilResponse): string {
+  return ["Council session closed.", `Your assigned name is: ${response.agent_name}`].join("\n");
 }
 
 function formatSendResponse(response: SendResponseResponse): string {

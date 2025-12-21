@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - codex
 created_date: '2025-12-21 11:23'
-updated_date: '2025-12-21 16:19'
+updated_date: '2025-12-21 17:06'
 labels: []
 milestone: Council v1 (stdio)
 dependencies: []
@@ -55,4 +55,6 @@ Subtask 1.2 complete: core domain layout and CouncilService interface/types adde
 Subtask 1.2 updated and completed with service-scoped domain types and interface-layer DTOs; CouncilService interface + implementation now in src/core/services/council/index.ts.
 
 Subtask 1.3 complete: file-backed state store with lockfile + atomic writes; state path override supported; lint/format/typecheck pass.
+
+Subtask 1.4 complete: CouncilServiceImpl logic implemented with cursor-based polling and participant updates; lint/format/typecheck pass.
 <!-- SECTION:NOTES:END -->

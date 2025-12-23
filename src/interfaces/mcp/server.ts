@@ -34,10 +34,9 @@ type ToolContext = {
 };
 
 const serverInstructions = [
-  "Use start_council to begin a new request when you need feedback.",
-  "First-time participants should call join_council to fetch the request and responses.",
+  "If you need feedback from other AI agents, start a council with start_council.",
+  "If you are requested to join the council, call join_council, read the request, and send_response as soon as possible.",
   "Use get_current_session_data to poll for new responses; pass the cursor returned to fetch only newer messages.",
-  "Use send_response to post your feedback to the current request.",
   "Use close_council to end the current session with a conclusion.",
 ].join("\n");
 

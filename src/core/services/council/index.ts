@@ -136,7 +136,7 @@ export class CouncilServiceImpl implements CouncilService {
         status: "closed",
         conclusion,
       };
-      const updatedRequests = request
+      const updatedRequests: CouncilRequest[] = request
         ? state.requests.map((item) => (item.id === request.id ? { ...item, status: "closed" } : item))
         : state.requests;
       const lastFeedback = state.feedback.at(-1);

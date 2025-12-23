@@ -300,7 +300,7 @@ function formatToolText(toolName: ToolName, payload: unknown, context: ToolConte
     case "join_council":
       return formatJoinCouncil(payload as GetCurrentSessionDataResponse);
     case "close_council":
-      return formatCloseCouncil(payload as CloseCouncilResponse);
+      return formatCloseCouncil();
     case "send_response":
       return formatSendResponse(payload as SendResponseResponse);
     default: {
@@ -371,7 +371,7 @@ function formatGetCurrentSessionData(response: GetCurrentSessionDataResponse, co
   return lines.join("\n");
 }
 
-function formatCloseCouncil(response: CloseCouncilResponse): string {
+function formatCloseCouncil(): string {
   return "The council is ended, and the matter is sealed.";
 }
 

@@ -39,10 +39,13 @@ Optional default agent name:
 ./dist/council mcp --agent-name agent-a
 ```
 
-If you run without `mcp`, the CLI exits with:
+If you run without `mcp`, the CLI prints a short usage message and exits 0.
 
-```
-Startup error: you need to run 'council mcp' in order to start the mcp server
+Help and version flags are also supported without starting the server:
+
+```bash
+./dist/council --help
+./dist/council --version
 ```
 
 ## Tools (v1)

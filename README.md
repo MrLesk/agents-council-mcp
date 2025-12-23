@@ -214,7 +214,7 @@ AGENTS_COUNCIL_STATE_PATH=/path/to/state.json
 
 ## Development
 
-See `DEVELOPMENT.md` for local setup and workflow details.
+See [DEVELOPMENT.md](DEVELOPMENT.md) for local setup and workflow details.
 
 ## Compatibility
 

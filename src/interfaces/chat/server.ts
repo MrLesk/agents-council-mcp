@@ -2,6 +2,8 @@ import type { Server } from "bun";
 
 import { CouncilServiceImpl } from "../../core/services/council";
 import { FileCouncilStateStore } from "../../core/state/fileStateStore";
+import type { CouncilStateWatcher } from "../../core/state/watcher";
+import { watchCouncilState } from "../../core/state/watcher";
 import {
   mapCloseCouncilInput,
   mapCloseCouncilResponse,
@@ -30,22 +32,33 @@ type JsonRecord = Record<string, unknown>;
 export type ChatServer = {
   server: Server<undefined>;
   url: string;
+  close: () => void;
 };
 
 const service = new CouncilServiceImpl(new FileCouncilStateStore());
+const STATE_TOPIC = "council-state";
+const STATE_CHANGED_EVENT = JSON.stringify({ type: "state-changed" });
 
 export function startChatServer(options: ChatServerOptions): ChatServer {
   const hostname = options.hostname ?? "127.0.0.1";
   const port = options.port;
   let server: Server<undefined>;
+  let watcher: CouncilStateWatcher | null = null;
 
   try {
     server = Bun.serve({
       hostname,
       port,
-      async fetch(req) {
+      async fetch(req, bunServer) {
         try {
           const url = new URL(req.url);
+          if (req.method === "GET" && url.pathname === "/ws") {
+            const upgraded = bunServer.upgrade(req);
+            if (upgraded) {
+              return;
+            }
+            return jsonError(400, "WebSocket upgrade failed.");
+          }
           if (req.method === "POST") {
             switch (url.pathname) {
               case "/start-council":
@@ -77,6 +90,25 @@ export function startChatServer(options: ChatServerOptions): ChatServer {
           return jsonError(500, getErrorMessage(error));
         }
       },
+      websocket: {
+        open(ws) {
+          try {
+            ws.subscribe(STATE_TOPIC);
+          } catch {
+            // Ignore subscription errors.
+          }
+        },
+        message() {
+          // Ignore incoming messages from clients.
+        },
+        close(ws) {
+          try {
+            ws.unsubscribe(STATE_TOPIC);
+          } catch {
+            // Ignore unsubscribe errors.
+          }
+        },
+      },
     });
   } catch (error) {
     if (isErrno(error, "EADDRINUSE")) {
@@ -87,7 +119,24 @@ export function startChatServer(options: ChatServerOptions): ChatServer {
     throw error;
   }
 
-  return { server, url: `http://localhost:${server.port}` };
+  watcher = watchCouncilState({
+    onChange: () => {
+      try {
+        server.publish(STATE_TOPIC, STATE_CHANGED_EVENT);
+      } catch {
+        // Ignore publish errors to avoid destabilizing the server.
+      }
+    },
+  });
+
+  return {
+    server,
+    url: `http://localhost:${server.port}`,
+    close: () => {
+      watcher?.close();
+      watcher = null;
+    },
+  };
 }
 
 async function handleStartCouncil(req: Request): Promise<Response> {

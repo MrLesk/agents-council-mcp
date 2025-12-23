@@ -1,8 +1,8 @@
 import { promises as fs } from "node:fs";
-import { homedir } from "node:os";
 import path from "node:path";
 
 import type { CouncilState } from "../services/council/types";
+import { resolveCouncilStatePath } from "./path";
 import type { CouncilStateStore, CouncilStateUpdater } from "./store";
 
 const DEFAULT_STATE_VERSION = 1;
@@ -13,8 +13,8 @@ const LOCK_MAX_WAIT_MS = 10_000;
 export class FileCouncilStateStore implements CouncilStateStore {
   private readonly statePath: string;
 
-  constructor(statePath: string = resolveStatePath()) {
-    this.statePath = normalizePath(statePath);
+  constructor(statePath?: string) {
+    this.statePath = resolveCouncilStatePath(statePath);
   }
 
   async load(): Promise<CouncilState> {
@@ -39,27 +39,6 @@ export class FileCouncilStateStore implements CouncilStateStore {
       return result;
     });
   }
-}
-
-function resolveStatePath(): string {
-  const override = process.env.AGENTS_COUNCIL_STATE_PATH?.trim();
-  if (override) {
-    return normalizePath(override);
-  }
-
-  return path.join(homedir(), ".agents-council", "state.json");
-}
-
-function normalizePath(input: string): string {
-  if (input === "~") {
-    return homedir();
-  }
-
-  if (input.startsWith("~/")) {
-    return path.join(homedir(), input.slice(2));
-  }
-
-  return path.resolve(input);
 }
 
 function createInitialState(): CouncilState {

@@ -1,9 +1,8 @@
 import path from "node:path";
 
 import { Command } from "commander";
-import type { Server } from "bun";
 
-import { startChatServer } from "../interfaces/chat/server";
+import { startChatServer, type ChatServer } from "../interfaces/chat/server";
 import { startMcpServer } from "../interfaces/mcp/server";
 
 type ResponseFormat = "markdown" | "json";
@@ -42,12 +41,12 @@ const main = async (): Promise<void> => {
     .action(async (options: { port: string; open: boolean }) => {
       try {
         const port = parsePort(options.port);
-        const { server, url } = startChatServer({ port });
-        printChatStartup(url);
+        const chatServer = startChatServer({ port });
+        printChatStartup(chatServer.url);
         if (options.open) {
-          openBrowser(url);
+          openBrowser(chatServer.url);
         }
-        setupChatShutdown(server);
+        setupChatShutdown(chatServer);
       } catch (error) {
         reportAndExit("Failed to start chat server", error);
       }
@@ -131,16 +130,19 @@ function openBrowser(url: string): void {
   }
 }
 
-function setupChatShutdown(server: Server<undefined>): void {
+function setupChatShutdown(chatServer: ChatServer): void {
   let shuttingDown = false;
+  const { server, close } = chatServer;
 
   const shutdown = (): void => {
     if (shuttingDown) {
       return;
     }
     shuttingDown = true;
+    close();
 
     const forceTimer = setTimeout(() => {
+      close();
       void server.stop(true).finally(() => {
         process.exit(0);
       });

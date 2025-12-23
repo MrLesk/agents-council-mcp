@@ -29,6 +29,7 @@ You MUST read the overview resource to understand the complete workflow. The inf
 
 ## Important instructions for this project that should be kept in mind:
 
+* [Project Overview](README.md)
 * [Development plan for this project](plan.md) 
 * [Development instructions](docs/council.md) 
 * [Up to date Bun documentation](docs/bun.md)

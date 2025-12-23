@@ -564,7 +564,7 @@ The result is a single file that can be deployed anywhere without needing Node.j
 
 Bun automatically handles serving the frontend assets with proper MIME types and cache headers. The HTML import is replaced with a manifest object that `Bun.serve` uses to efficiently serve pre-bundled assets.
 
-For more details on building full-stack applications with Bun, see the [full-stack guide](/bundler/fullstack).
+For more details on building full-stack applications with Bun, see the [full-stack guide](./fullstack).
 
 ***
 
@@ -1164,7 +1164,7 @@ console.log(`Running in ${config.environment} mode`);
 console.log(`API endpoint: ${config.apiUrl}`);
 ```
 
-Plugins can perform any transformation: compile YAML/TOML configs, inline SQL queries, generate type-safe API clients, or preprocess templates. Refer to the [plugin documentation](/bundler/plugins) for more details.
+Plugins can perform any transformation: compile YAML/TOML configs, inline SQL queries, generate type-safe API clients, or preprocess templates. Refer to the [plugin documentation](./plugins) for more details.
 
 ***
 

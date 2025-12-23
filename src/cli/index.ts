@@ -1,128 +1,170 @@
 import path from "node:path";
 
+import { Command } from "commander";
+import type { Server } from "bun";
+
+import { startChatServer } from "../interfaces/chat/server";
 import { startMcpServer } from "../interfaces/mcp/server";
 
 type ResponseFormat = "markdown" | "json";
 
 declare const __COUNCIL_VERSION__: string | undefined;
 
-const HELP_TEXT = [
-  "Agents Council MCP",
-  "",
-  "Usage:",
-  "  council mcp [--format <markdown|json>] [--agent-name <name>]",
-  "",
-  "Options:",
-  "  -f, --format <markdown|json>  Response format (default: markdown)",
-  "  -n, --agent-name <name>       Default agent name for the session",
-  "  -h, --help                    Show help",
-  "  -v, --version                 Show version",
-  "",
-  "Run `council mcp` to start the MCP server.",
-].join("\n");
+const DEFAULT_CHAT_PORT = 5123;
+const FORCE_SHUTDOWN_TIMEOUT_MS = 3000;
 
 const main = async (): Promise<void> => {
-  const args = Bun.argv.slice(2);
-  const wantsHelp = args.includes("-h") || args.includes("--help");
-  const wantsVersion = args.includes("-v") || args.includes("--version");
+  const version = await resolveVersion();
+  const program = new Command();
 
-  if (wantsHelp) {
-    printHelp();
-    return;
-  }
+  program.name("council").description("Agents Council MCP").version(version, "-v, --version", "Show version");
 
-  if (wantsVersion) {
-    const version = await resolveVersion();
-    console.log(version);
-    return;
-  }
+  program
+    .command("mcp")
+    .description("Start the MCP server.")
+    .option("-f, --format <markdown|json>", "Response format (default: markdown)", "markdown")
+    .option("-n, --agent-name <name>", "Default agent name for the session")
+    .action(async (options: { format: string; agentName?: string }) => {
+      try {
+        const format = parseFormat(options.format);
+        const agentName = parseAgentName(options.agentName);
+        await startMcpServer({ format, agentName });
+      } catch (error) {
+        reportAndExit("Failed to start MCP server", error);
+      }
+    });
 
-  if (args.length === 0) {
-    printHelp();
-    return;
-  }
+  program
+    .command("chat")
+    .description("Start the council chat web interface.")
+    .option("-p, --port <number>", "Port for the local chat server", `${DEFAULT_CHAT_PORT}`)
+    .option("--no-open", "Do not open the browser automatically")
+    .action(async (options: { port: string; open: boolean }) => {
+      try {
+        const port = parsePort(options.port);
+        const { server, url } = startChatServer({ port });
+        printChatStartup(url);
+        if (options.open) {
+          openBrowser(url);
+        }
+        setupChatShutdown(server);
+      } catch (error) {
+        reportAndExit("Failed to start chat server", error);
+      }
+    });
 
-  if (args[0] !== "mcp") {
-    console.error(`Unknown command: ${args[0]}`);
-    printHelp();
+  program.on("command:*", (operands: string[]) => {
+    const command = operands[0] ?? "unknown";
+    console.error(`Unknown command: ${command}`);
+    program.outputHelp();
     process.exit(1);
+  });
+
+  if (process.argv.length <= 2) {
+    program.outputHelp();
+    return;
   }
 
-  const format = parseFormat(args.slice(1));
-  const agentName = parseAgentName(args.slice(1));
-
-  await startMcpServer({ format, agentName });
+  await program.parseAsync(process.argv);
 };
 
 main().catch((error) => {
-  console.error("Failed to start MCP server:", error);
-  process.exit(1);
+  reportAndExit("Failed to start council", error);
 });
 
-function parseFormat(args: string[]): ResponseFormat {
-  let format: ResponseFormat = "markdown";
-
-  for (let index = 0; index < args.length; index += 1) {
-    const arg = args[index];
-    if (!arg) {
-      continue;
-    }
-    if (arg === "--format" || arg === "-f") {
-      const value = args[index + 1];
-      if (!value) {
-        console.error("Startup error: --format expects 'markdown' or 'json'.");
-        process.exit(1);
-      }
-      format = value as ResponseFormat;
-      index += 1;
-      continue;
-    }
-    if (arg.startsWith("--format=")) {
-      format = arg.slice("--format=".length) as ResponseFormat;
-    }
+function parseFormat(value: string): ResponseFormat {
+  if (value !== "markdown" && value !== "json") {
+    throw new Error("Startup error: --format expects 'markdown' or 'json'.");
   }
 
-  if (format !== "markdown" && format !== "json") {
-    console.error("Startup error: --format expects 'markdown' or 'json'.");
-    process.exit(1);
-  }
-
-  return format;
+  return value;
 }
 
-function parseAgentName(args: string[]): string | undefined {
-  let agentName: string | undefined;
-
-  for (let index = 0; index < args.length; index += 1) {
-    const arg = args[index];
-    if (!arg) {
-      continue;
-    }
-    if (arg === "--agent-name" || arg === "-n") {
-      const value = args[index + 1];
-      if (!value) {
-        console.error("Startup error: --agent-name expects a value.");
-        process.exit(1);
-      }
-      agentName = value.trim();
-      index += 1;
-      continue;
-    }
-    if (arg.startsWith("--agent-name=")) {
-      agentName = arg.slice("--agent-name=".length).trim();
-    }
+function parseAgentName(value?: string): string | undefined {
+  if (value === undefined) {
+    return undefined;
   }
 
-  if (agentName !== undefined && agentName.length === 0) {
-    console.error("Startup error: --agent-name expects a value.");
-    process.exit(1);
+  const agentName = value.trim();
+  if (!agentName) {
+    throw new Error("Startup error: --agent-name expects a value.");
   }
 
   return agentName;
 }
 
-function printHelp(): void {
-  console.log(HELP_TEXT);
+function parsePort(value: string): number {
+  const port = Number.parseInt(value, 10);
+  if (!Number.isInteger(port)) {
+    throw new Error("Startup error: --port expects an integer.");
+  }
+  if (port < 1 || port > 65535) {
+    throw new Error("Startup error: --port must be between 1 and 65535.");
+  }
+  return port;
+}
+
+function printChatStartup(url: string): void {
+  const lines = [
+    `\uD83D\uDE80 Agents Council browser interface running at ${url}`,
+    "\u23F9\uFE0F  Press Cmd+C to stop the server",
+    "\uD83D\uDCA1 Open your browser and navigate to the URL above",
+  ];
+  console.log(lines.join("\n"));
+}
+
+function openBrowser(url: string): void {
+  const platform = process.platform;
+  const command =
+    platform === "darwin" ? ["open", url] : platform === "win32" ? ["cmd", "/c", "start", "", url] : ["xdg-open", url];
+
+  try {
+    Bun.spawn(command, {
+      stdin: "ignore",
+      stdout: "ignore",
+      stderr: "ignore",
+    });
+  } catch (error) {
+    console.warn("Unable to open the browser automatically. Please open the URL manually.");
+    console.warn(url);
+    console.warn(error);
+  }
+}
+
+function setupChatShutdown(server: Server<undefined>): void {
+  let shuttingDown = false;
+
+  const shutdown = (): void => {
+    if (shuttingDown) {
+      return;
+    }
+    shuttingDown = true;
+
+    const forceTimer = setTimeout(() => {
+      void server.stop(true).finally(() => {
+        process.exit(0);
+      });
+    }, FORCE_SHUTDOWN_TIMEOUT_MS);
+
+    void server
+      .stop()
+      .catch((error: unknown) => {
+        console.error("Failed to stop chat server:", error);
+      })
+      .finally(() => {
+        clearTimeout(forceTimer);
+        process.exit(0);
+      });
+  };
+
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
+}
+
+function reportAndExit(message: string, error: unknown): never {
+  const details = error instanceof Error ? error.message : String(error);
+  console.error(`${message}: ${details}`);
+  process.exit(1);
 }
 
 async function resolveVersion(): Promise<string> {

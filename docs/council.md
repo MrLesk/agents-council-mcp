@@ -67,6 +67,9 @@ Disable auto-open:
 ./dist/council chat --no-open
 ```
 
+The MCP tools are meant for AI agent clients (Claude/Codex/Gemini/etc). The chat UI is the human-facing
+interface for participating in the same local council session.
+
 ## Tools (v1)
 
 The MCP server exposes five tools:

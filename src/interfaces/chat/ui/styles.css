@@ -13,6 +13,8 @@
   --ember: #d88a47;
   --crimson: #8c3b2e;
   --emerald: #3f8d73;
+  --sage: #7fc6aa;
+  --sage-soft: rgba(127, 198, 170, 0.25);
   --shadow: rgba(12, 8, 6, 0.55);
   --font-display: "Cinzel", serif;
   --font-body: "IM Fell English", serif;
@@ -53,24 +55,25 @@ body::before {
 .app {
   max-width: 1200px;
   margin: 0 auto;
-  padding: 32px 20px 56px;
+  padding: 24px 20px 64px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 20px;
 }
 
 .hero {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 24px;
-  padding-bottom: 8px;
+  gap: 16px;
+  padding-bottom: 12px;
   border-bottom: 1px solid var(--gold-soft);
 }
 
 .brand {
   display: flex;
   align-items: center;
+  gap: 16px;
 }
 
 .logo {
@@ -81,20 +84,37 @@ body::before {
 }
 
 .logo-header {
-  height: clamp(72px, 10vw, 200px);
+  height: clamp(48px, 7vw, 96px);
   width: auto;
 }
 
-.tagline {
-  color: var(--parchment-muted);
-  margin-top: 6px;
-}
-
-.status {
+.brand-text {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  align-items: flex-end;
+  gap: 4px;
+}
+
+.brand-title {
+  font-family: var(--font-display);
+  letter-spacing: 2px;
+  font-size: clamp(20px, 2.6vw, 28px);
+}
+
+.hero-controls {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.identity {
+  font-size: 13px;
+  color: var(--parchment-muted);
+}
+
+.identity strong {
+  color: var(--gold);
+  font-family: var(--font-display);
+  letter-spacing: 0.5px;
 }
 
 .status-pill {
@@ -153,12 +173,6 @@ body::before {
   color: var(--parchment-muted);
 }
 
-.grid {
-  display: grid;
-  grid-template-columns: repeat(12, minmax(0, 1fr));
-  gap: 24px;
-}
-
 .panel {
   position: relative;
   padding: 22px;
@@ -180,7 +194,7 @@ body::before {
 
 .panel-header {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
   gap: 16px;
   margin-bottom: 16px;
@@ -194,28 +208,66 @@ body::before {
   font-weight: 600;
 }
 
-.request-panel {
-  grid-column: span 4;
+.matter-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
-.chat-panel {
-  grid-column: span 5;
+.hall {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.matter-panel {
   display: flex;
   flex-direction: column;
   gap: 16px;
 }
 
-.control-panel {
-  grid-column: span 3;
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
+.matter-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 0.9fr);
+  gap: 24px;
+  align-items: start;
 }
 
-.panel-section {
+.matter-grid-single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.matter-details {
   display: flex;
   flex-direction: column;
   gap: 10px;
+}
+
+.matter-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-left: 24px;
+  border-left: 1px solid rgba(210, 177, 119, 0.2);
+}
+
+.seal-panel,
+.convene-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.matter-cta {
+  margin-top: 8px;
+}
+
+.voices-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
 .meta {
@@ -232,18 +284,50 @@ body::before {
 .request-text {
   font-size: 18px;
   line-height: 1.4;
+  margin: 0 0 12px;
+}
+
+.request-card {
+  padding: 16px 18px;
+  border-radius: 16px;
+  border: 1px solid rgba(210, 177, 119, 0.32);
+  background: rgba(20, 14, 11, 0.7);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.request-card-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--gold);
+  font-family: var(--font-display);
+  margin-bottom: 8px;
 }
 
 .conclusion {
   margin-top: 18px;
-  padding-top: 16px;
-  border-top: 1px dashed rgba(210, 177, 119, 0.3);
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: linear-gradient(140deg, rgba(127, 198, 170, 0.32), rgba(18, 24, 21, 0.78));
+  border: 1px solid rgba(127, 198, 170, 0.6);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 12px 22px rgba(12, 24, 18, 0.35);
+  border-left: 4px solid rgba(127, 198, 170, 0.85);
+}
+
+.solution-label {
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  color: var(--sage);
+  font-family: var(--font-display);
+  margin-bottom: 8px;
 }
 
 .conclusion-text {
   font-size: 17px;
   line-height: 1.5;
   font-style: italic;
+  margin: 0 0 10px;
 }
 
 .role-name {
@@ -310,6 +394,12 @@ body::before {
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
 }
 
+.btn-settings {
+  padding: 8px 14px;
+  font-size: 13px;
+  letter-spacing: 1px;
+}
+
 .btn:hover {
   transform: translateY(-1px);
   box-shadow: 0 8px 16px rgba(6, 4, 3, 0.4);
@@ -351,9 +441,6 @@ body::before {
   display: flex;
   flex-direction: column;
   gap: 12px;
-  max-height: 360px;
-  overflow-y: auto;
-  padding-right: 6px;
 }
 
 .message {
@@ -542,14 +629,17 @@ body::before {
 }
 
 @media (max-width: 1100px) {
-  .request-panel,
-  .chat-panel,
-  .control-panel {
-    grid-column: span 12;
+  .matter-grid {
+    grid-template-columns: 1fr;
   }
 
-  .status {
-    align-items: flex-start;
+  .matter-actions {
+    padding-left: 0;
+    border-left: none;
+  }
+
+  .matter-header-actions {
+    justify-content: flex-start;
   }
 }
 
@@ -560,12 +650,76 @@ body::before {
   }
 
   .brand {
-    letter-spacing: 2px;
+    gap: 12px;
   }
 
   .gate-stack {
     transform: translateY(-12px);
   }
+}
+
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 8, 6, 0.85);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 110;
+  animation: fadeIn 0.2s ease;
+}
+
+.dialog-panel {
+  max-width: 520px;
+  width: calc(100% - 48px);
+  padding: 24px;
+  border-radius: var(--radius);
+  background: linear-gradient(160deg, rgba(33, 26, 20, 0.98), rgba(18, 13, 10, 0.94));
+  border: 1px solid rgba(210, 177, 119, 0.35);
+  box-shadow: 0 24px 48px rgba(6, 4, 3, 0.6);
+  animation: fadeRise 0.25s ease;
+}
+
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+}
+
+.dialog-header h2 {
+  margin: 0;
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.dialog-close {
+  background: none;
+  border: none;
+  color: var(--parchment-muted);
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.2s ease;
+}
+
+.dialog-close:hover {
+  color: var(--parchment);
+}
+
+.dialog-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dialog-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  margin-top: 4px;
 }
 
 /* Settings popup */

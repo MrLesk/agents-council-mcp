@@ -226,9 +226,9 @@ AGENTS_COUNCIL_STATE_PATH=/path/to/state.json
 
 - [x] v0.1.0 - MCP Council
 - [ ] v0.2.0 - Chat UI
-- [ ] v0.3.0 - Spawn Claude automatically
-- [ ] v0.4.0 - Spawn Codex automatically
-- [ ] v0.5.0 - Spawn Gemini automatically
+- [ ] v0.3.0 - Summon Claude
+- [ ] v0.4.0 - Summon Codex
+- [ ] v0.5.0 - Summon Gemini
 - [ ] v0.6.0 - Multiple council sessions in parallel
 - [ ] v0.7.0 - Connect to external LLMs via API Keys
 - [ ] v Next - Submit your idea

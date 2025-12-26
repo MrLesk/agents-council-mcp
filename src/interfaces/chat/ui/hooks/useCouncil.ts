@@ -68,8 +68,8 @@ export function useCouncil(name: string | null): CouncilContext {
   }, [sessionStatus, currentRequest]);
 
   const canClose = useCallback(
-    (userName: string): boolean => {
-      return Boolean(hallState === "active" && currentRequest && currentRequest.created_by === userName);
+    (_userName: string): boolean => {
+      return Boolean(hallState === "active" && currentRequest);
     },
     [hallState, currentRequest],
   );

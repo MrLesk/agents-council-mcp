@@ -60,7 +60,7 @@ jobs:
         shell: bash
         run: |
           mkdir -p dist
-          bun build src/cli/index.ts --compile --minify --target=${{ matrix.target }} --outfile=dist/${{ env.BIN }}
+          bun build src/cli/index.ts --compile --minify --target=${{ matrix.target }} --define __COUNCIL_VERSION__="\"${GITHUB_REF##refs/tags/v}\"" --outfile=dist/${{ env.BIN }}
       - name: Make binary executable (non-Windows)
         if: ${{ !contains(matrix.target,'windows') }}
         run: chmod +x "dist/${{ env.BIN }}"

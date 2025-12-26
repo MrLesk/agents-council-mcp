@@ -1,6 +1,6 @@
 {
   "name": "agents-council",
-  "version": "0.2.3",
+  "version": "0.2.5",
   "type": "module",
   "files": [
     "scripts/*.cjs",

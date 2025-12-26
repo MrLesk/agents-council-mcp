@@ -257,7 +257,7 @@ jobs:
               & .\node_modules\.bin\council.cmd --version
               break
             } catch {
-              Write-Host "Attempt $attempt: binary not ready, retrying in 15s..."
+              Write-Host "Attempt ${attempt}: binary not ready, retrying in 15s..."
               Start-Sleep -Seconds 15
             }
           }

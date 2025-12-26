@@ -231,6 +231,9 @@ AGENTS_COUNCIL_STATE_PATH=/path/to/state.json
 - [ ] v0.5.0 - Summon Gemini
 - [ ] v0.6.0 - Multiple council sessions in parallel
 - [ ] v0.7.0 - Connect to external LLMs via API Keys
+- [ ] v0.8.0 - Agents can summon user via telegram
+- [ ] v0.9.0 - Agents can summon user via slack
+- [ ] v0.9.0 - Agents can summon user via whatsapp
 - [ ] v Next - Submit your idea
 
 ## Development
